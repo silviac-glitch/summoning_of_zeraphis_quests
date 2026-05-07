@@ -3,568 +3,878 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>L'evocazione di Zeraphis - Tracker Missioni</title>
+    <title>📋 Tracker Missioni - Zeraphis</title>
+    
+    <!-- jsPDF per export PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/tabler-icons.min.css">
+    
     <style>
-        * { box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #0f1419;
-            color: #e8eaed;
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
         }
-        .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+
+        /* CSS Variables - Tema scuro sofisticato */
+        :root {
+            --bg-primary: #0f1419;
+            --bg-secondary: #0d1117;
+            --bg-tertiary: #1c2128;
+            --border-color: #2d333b;
+            --text-primary: #e8eaed;
+            --text-secondary: #c9cace;
+            --accent: #58a6ff;
+            --accent-dark: #1f6feb;
+            --success: #238636;
+            --danger: #da3633;
+            --warning: #d29922;
+            --info: #0969da;
+            --shadow: rgba(0, 0, 0, 0.4);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Header */
         .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-            border-bottom: 1px solid #2d333b;
-            padding-bottom: 1.5rem;
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+            border-bottom: 1px solid var(--border-color);
+            padding: 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px var(--shadow);
         }
-        .header h1 { margin: 0; font-size: 28px; font-weight: 600; }
-        .stats {
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #58a6ff 0%, #79c0ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stats-container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 1rem;
-            margin-bottom: 2rem;
+            margin-top: 1.5rem;
         }
-        .stat-card {
-            background: #1c2128;
-            border: 1px solid #2d333b;
+
+        .stat-box {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
-            padding: 1.5rem;
+            padding: 1rem;
             text-align: center;
+            transition: all 0.3s ease;
         }
-        .stat-value { font-size: 32px; font-weight: 600; color: #58a6ff; }
-        .stat-label { font-size: 12px; color: #8b949e; margin-top: 8px; text-transform: uppercase; }
+
+        .stat-box:hover {
+            border-color: var(--accent);
+            background: var(--bg-tertiary);
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-top: 0.5rem;
+        }
+
+        /* Filtri e Ricerca */
         .controls {
-            display: flex;
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 1rem;
-            margin-bottom: 2rem;
-            flex-wrap: wrap;
         }
-        .controls button, .controls input, .controls select {
-            padding: 8px 16px;
-            border: 1px solid #2d333b;
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .control-group label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        input[type="text"],
+        select {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.75rem;
             border-radius: 6px;
-            background: #0d1117;
-            color: #e8eaed;
-            font-size: 13px;
-            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
         }
-        .controls button:hover { background: #1c2128; }
-        .controls input, .controls select {
-            flex: 1;
-            min-width: 150px;
+
+        input[type="text"]:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.1);
         }
+
+        /* Tabella */
+        .table-wrapper {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
         .table-container {
-            background: #0d1117;
-            border: 1px solid #2d333b;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
-            overflow-x: auto;
-            max-height: 900px;
-            overflow-y: auto;
+            overflow: hidden;
+            box-shadow: 0 4px 16px var(--shadow);
         }
+
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 13px;
+            font-size: 0.95rem;
         }
+
         thead {
-            background: #1c2128;
+            background: var(--bg-tertiary);
+            border-bottom: 2px solid var(--border-color);
             position: sticky;
-            top: 0;
-            border-bottom: 1px solid #2d333b;
+            top: 60px;
+            z-index: 10;
         }
+
         th {
-            padding: 12px;
+            padding: 1rem;
             text-align: left;
-            font-weight: 500;
-            color: #8b949e;
-            border-right: 1px solid #2d333b;
+            font-weight: 600;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            font-size: 0.85rem;
         }
+
+        th:nth-child(1) { width: 4%; text-align: center; }
+        th:nth-child(2) { width: 6%; }
+        th:nth-child(3) { width: 8%; }
+        th:nth-child(4) { width: 20%; }
+        th:nth-child(5) { width: 40%; }
+        th:nth-child(6) { width: 15%; }
+        th:nth-child(7) { width: 7%; text-align: center; }
+
+        tbody tr {
+            border-bottom: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background: var(--bg-tertiary);
+            border-left: 3px solid var(--accent);
+            padding-left: -3px;
+        }
+
         td {
-            padding: 12px;
-            border-bottom: 1px solid #2d333b;
-            border-right: 1px solid #2d333b;
+            padding: 1rem;
+            vertical-align: top;
         }
-        tr.completata { background: #161b22; opacity: 0.6; }
-        tr.branch-row { background: #1c2128; }
-        tr.branch-row td { padding: 8px 12px; }
-        .checkbox { width: 18px; height: 18px; cursor: pointer; }
-        .missione-num { font-weight: 600; color: #58a6ff; }
-        .branch-indicator {
-            display: inline-block;
-            width: 6px;
-            height: 6px;
-            background: #f0883e;
-            border-radius: 50%;
-            margin-right: 6px;
-        }
-        .expand-btn {
-            background: none;
-            border: none;
-            color: #58a6ff;
-            cursor: pointer;
-            font-size: 14px;
-            padding: 0;
-            margin-right: 6px;
-        }
-        .expand-btn:hover { color: #79c0ff; }
-        .cap-icon {
-            width: 24px;
-            height: 24px;
+
+        /* Checkbox */
+        input[type="checkbox"] {
+            appearance: none;
+            width: 22px;
+            height: 22px;
+            border: 2px solid var(--border-color);
             border-radius: 4px;
+            background: var(--bg-primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            font-weight: 700;
+        }
+
+        input[type="checkbox"]:hover {
+            border-color: var(--accent);
+        }
+
+        input[type="checkbox"]:checked {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: var(--bg-primary);
+        }
+
+        input[type="checkbox"]:checked::after {
+            content: "✓";
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--bg-primary);
+        }
+
+        /* Righe completate */
+        tr.completata {
+            opacity: 0.65;
+            background: var(--bg-tertiary);
+        }
+
+        tr.completata td {
+            color: var(--text-secondary);
+            text-decoration: line-through;
+        }
+
+        /* Branch rows */
+        tr.branch-row {
+            background: var(--bg-tertiary);
+            font-size: 0.9rem;
+        }
+
+        tr.branch-row td:first-child {
+            padding-left: 2rem;
+        }
+
+        /* Badge per task */
+        .task-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .task-item {
+            padding: 0.5rem 0.75rem;
+            background: var(--bg-tertiary);
+            border-left: 3px solid var(--accent);
+            border-radius: 3px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .task-item strong {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        /* Capitoli/Categorie */
+        .capitoli {
+            display: flex;
+            gap: 0.3rem;
+            flex-wrap: wrap;
+        }
+
+        .cap-badge {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            background: #2d333b;
-            margin: 0 4px;
-            font-size: 12px;
-        }
-        .cap-label {
-            font-size: 11px;
-            color: #8b949e;
-            white-space: nowrap;
-            padding: 2px 6px;
-            background: #161b22;
+            width: 28px;
+            height: 28px;
             border-radius: 4px;
-            display: inline-block;
-            margin: 2px;
+            background: var(--accent);
+            color: var(--bg-primary);
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: default;
+            transition: all 0.2s ease;
+            border: 1px solid var(--accent-dark);
         }
-        .task-item {
-            margin: 4px 0;
-            padding-left: 16px;
-            border-left: 2px solid #58a6ff;
+
+        .cap-badge:hover {
+            transform: scale(1.1);
+            box-shadow: 0 2px 8px rgba(88, 166, 255, 0.3);
         }
+
+        /* EV (Evento) */
         .ev-badge {
-            display: inline-block;
-            padding: 2px 8px;
-            background: #1c2128;
-            border-radius: 4px;
-            font-size: 11px;
-            color: #8b949e;
-        }
-        .legend {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 8px;
-            margin-bottom: 2rem;
-        }
-        .legend-item {
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            gap: 6px;
-            font-size: 12px;
-            color: #8b949e;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--success) 0%, #2ea043 100%);
+            color: white;
+            font-weight: 700;
+            font-size: 0.9rem;
+            border: 2px solid var(--border-color);
         }
-        .legend-item img {
-            width: 20px;
-            height: 20px;
+
+        /* Pulsanti */
+        button {
+            padding: 0.75rem 1.5rem;
+            background: var(--accent);
+            color: var(--bg-primary);
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.3px;
+        }
+
+        button:hover {
+            background: var(--accent-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(88, 166, 255, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .button-group {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        /* Footer */
+        .footer {
+            max-width: 1400px;
+            margin: 3rem auto;
+            padding: 2rem;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .footer a {
+            color: var(--accent);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .footer a:hover {
+            color: var(--accent-dark);
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .header {
+                padding: 1rem;
+            }
+
+            .controls,
+            .button-group,
+            .table-wrapper {
+                padding: 0 1rem;
+            }
+
+            th:nth-child(4),
+            th:nth-child(5) {
+                font-size: 0.75rem;
+            }
+
+            td {
+                padding: 0.75rem 0.5rem;
+            }
+
+            .task-item {
+                font-size: 0.85rem;
+            }
+        }
+
+        /* Scroll Bar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state p {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <div>
-                <h1>L'evocazione di Zeraphis</h1>
-                <p style="margin: 4px 0 0 0; color: #8b949e; font-size: 14px;">Tracker Interattivo - 80 Missioni</p>
-            </div>
-            <div style="text-align: right;">
-                <button onclick="exportPDF()" style="background: #238636; border-color: #238636; color: white; margin-bottom: 8px; display: block;">
-                    📥 Esporta PDF
-                </button>
-                <button onclick="resetProgress()" style="background: #da3633; border-color: #da3633; color: white;">
-                    🔄 Reset
-                </button>
-            </div>
-        </div>
-
-        <div class="stats">
-            <div class="stat-card">
-                <div class="stat-value" id="completateVal">0</div>
-                <div class="stat-label">Missioni completate</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="progressVal">0%</div>
-                <div class="stat-label">Progresso totale</div>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-content">
+            <h1>📋 Tracker Missioni</h1>
+            <div class="stats-container">
+                <div class="stat-box">
+                    <div class="stat-label">Completate</div>
+                    <div class="stat-value" id="completateVal">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Totali</div>
+                    <div class="stat-value" id="totaliVal">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Progresso</div>
+                    <div class="stat-value" id="progressVal">0%</div>
+                </div>
             </div>
         </div>
+    </div>
 
-        <div class="legend" id="legendContainer"></div>
-
-        <div class="controls">
-            <input type="text" id="cercaMissione" placeholder="Cerca per numero missione..." onkeyup="renderTable()">
-            <select id="filtroCapitolo" onchange="renderTable()">
-                <option value="">Mostra tutte le missioni</option>
-                <option value="3">Cap. 3 - Artigianato</option>
-                <option value="4">Cap. 4 - Meraviglie Segrete</option>
-                <option value="5">Cap. 5 - Calderone</option>
-                <option value="8">Cap. 8 - Orchi e Goblin</option>
-                <option value="9">Cap. 9 - Elfi dei Boschi</option>
-                <option value="11">Cap. 11 - Halflings</option>
-                <option value="13">Cap. 13 - Elementali</option>
-                <option value="15">Cap. 15 - Municipio</option>
-                <option value="19">Cap. 19 - Caserme Preparate</option>
+    <!-- Controlli -->
+    <div class="controls">
+        <div class="control-group">
+            <label for="ricerca">🔍 Ricerca per SEQ</label>
+            <input type="text" id="ricerca" placeholder="Es: 1, 15, 42...">
+        </div>
+        <div class="control-group">
+            <label for="filtroCapitolo">📚 Filtra per Capitolo</label>
+            <select id="filtroCapitolo">
+                <option value="">Tutti i Capitoli</option>
             </select>
         </div>
+        <div class="control-group">
+            <label for="filtroStato">✓ Filtra per Stato</label>
+            <select id="filtroStato">
+                <option value="">Tutti</option>
+                <option value="completata">Completate</option>
+                <option value="incomplete">Incomplete</option>
+            </select>
+        </div>
+    </div>
 
+    <!-- Pulsanti d'azione -->
+    <div class="button-group">
+        <button onclick="resetall()">🔄 Azzera Tutto</button>
+        <button onclick="exportPDF()">📥 Esporta PDF</button>
+        <button onclick="window.location.reload()">↻ Ricarica</button>
+    </div>
+
+    <!-- Tabella -->
+    <div class="table-wrapper">
         <div class="table-container">
             <table id="missioniTable">
                 <thead>
                     <tr>
-                        <th style="width: 30px;">✓</th>
-                        <th style="width: 50px;">SEQ</th>
-                        <th style="width: 40px;">EP</th>
-                        <th style="width: 35px;">EV</th>
-                        <th style="width: 150px;">Inizia se</th>
-                        <th style="width: 200px;">Task</th>
-                        <th style="width: 120px;">Capitoli</th>
+                        <th>✓</th>
+                        <th>SEQ</th>
+                        <th>EP</th>
+                        <th>Inizia se</th>
+                        <th>Task</th>
+                        <th>Capitoli</th>
+                        <th>EV</th>
                     </tr>
                 </thead>
-                <tbody id="missioniBody"></tbody>
+                <tbody id="tableBody">
+                </tbody>
             </table>
         </div>
     </div>
 
+    <!-- Footer -->
+    <div class="footer">
+        <p>Tracker Missioni Interattivo • Dati salvati automaticamente • <span id="saveTime"></span></p>
+    </div>
+
     <script>
-const capitoli = [
-    {num:1, nome:"", icona:"https://i.imgur.com/q2VEXkP.png"},
-    {num:2, nome:"", icona:"https://i.imgur.com/3Bjo6mg.png"},
-    {num:3, nome:"Artigianato", icona:"https://i.imgur.com/DgnS5F3.png"},
-    {num:4, nome:"Meraviglie Segrete", icona:"https://i.imgur.com/ggZwVLl.png"},
-    {num:5, nome:"Calderone", icona:"https://i.imgur.com/He5NvPL.png"},
-    {num:6, nome:"", icona:"https://i.imgur.com/rOCsLjU.png"},
-    {num:7, nome:"", icona:"https://i.imgur.com/JFVrylR.png"},
-    {num:8, nome:"Orchi e Goblin", icona:"https://i.imgur.com/Hpgg05E.png"},
-    {num:9, nome:"Elfi dei Boschi", icona:"https://i.imgur.com/RIZRWjV.png"},
-    {num:10, nome:"", icona:"https://i.imgur.com/LApuHls.png"},
-    {num:11, nome:"Halflings", icona:"https://i.imgur.com/s4JOwCK.png"},
-    {num:12, nome:"", icona:"https://i.imgur.com/nJJt3di.png"},
-    {num:13, nome:"Elementali", icona:"https://i.imgur.com/ImNawrt.png"},
-    {num:14, nome:"", icona:"https://i.imgur.com/2bYG1U5.png"},
-    {num:15, nome:"Municipio", icona:"https://i.imgur.com/r9PBGyK.png"},
-    {num:16, nome:"", icona:"https://i.imgur.com/BI3Dy99.png"},
-    {num:17, nome:"", icona:"https://i.imgur.com/InZKQn3.png"},
-    {num:18, nome:"", icona:"https://i.imgur.com/Wc1V4cP.png"},
-    {num:19, nome:"Caserme Preparate", icona:"https://i.imgur.com/0KkTfbj.png"},
-    {num:20, nome:"", icona:"https://i.imgur.com/nA1l4FZ.png"},
-    {num:21, nome:"", icona:"https://i.imgur.com/76wX4OC.png"},
-    {num:22, nome:"", icona:"https://i.imgur.com/KCJnPby.png"},
-    {num:23, nome:"", icona:"https://i.imgur.com/QDzkoKk.png"},
-    {num:24, nome:"", icona:"https://i.imgur.com/GXFw7SH.png"}
-];
+        // ===== DATI MISSIONI =====
+        const datiMissioni = [
+            {seq: 1, ep: null, inizia: "inizia evento", task: ["Piazza offerte [3]"], ev: 45, cap: [], branch: false},
+            {seq: 2, ep: null, inizia: "completata 1", task: ["Compra Punti Conoscenza [6]"], ev: 46, cap: [], branch: false},
+            {seq: 3, ep: null, inizia: "completata 2", task: ["Fornisci Aiuto del vicinato [8]"], ev: 46, cap: [], branch: false},
+            {seq: 4, ep: null, inizia: "completata 3", task: ["Risolvi incontri Provincia, Torneo e/o Guglia [5]"], ev: 46, cap: [], branch: false},
+            {seq: 5, ep: null, inizia: "completata 4", task: ["Spendi Punti Conoscenza [4]"], ev: 47, cap: [], branch: false},
+            {seq: 6, ep: null, inizia: "completata 5", task: ["Produci Beni a scelta con l'opzione da 9h [3]"], ev: 47, cap: [3], branch: true, branches: [
+                {cond: "NON ricercato Artigianato", task: ["Produci Beni a scelta con l'opzione da 9h [3]"], cap: []},
+                {cond: "Ricercato Artigianato", task: ["Ottieni Vapori di Visione [12]"], cap: [3]}
+            ]},
+            {seq: 7, ep: null, inizia: "completata 6", task: ["Usa Istanti Tempo [1]", "Accetta offerte di altri giocatori [3]"], ev: 47, cap: [], branch: false},
+            {seq: 8, ep: null, inizia: "completata 7", task: ["Addestra unità O Esplora Provincie [1]", "Produci Bevande [12]"], ev: 48, cap: [], branch: false},
+            {seq: 9, ep: null, inizia: "completata 8", task: ["Produci Beni di Base a scelta da 9h [5]", "Produci Materiali per il mercato locale"], ev: 48, cap: [], branch: false},
+            {seq: 10, ep: null, inizia: "completata 9", task: ["Usa Cibo animali [1] O Negozia Incontri [3]", "Fornisci Aiuto del vicinato [12]"], ev: 48, cap: [], branch: false},
+            {seq: 11, ep: null, inizia: "completata 10", task: ["Spendi Punti Conoscenza [8]", "Usa Istanti Tempo [1]"], ev: 49, cap: [], branch: false},
+            {seq: 12, ep: null, inizia: "completata 11", task: ["Usa Istanti [4]", "Ottieni o usa Incantesimi [9]"], ev: 49, cap: [], branch: false},
+            {seq: 13, ep: null, inizia: "completata 12", task: ["Produci una buona somma di Beni a scelta"], ev: 49, cap: [4, 5, 6], branch: true, branches: [
+                {cond: "NON ricercato Meraviglie Antiche Orchi e Goblin", task: ["Produci Beni a scelta"], cap: []},
+                {cond: "NON ricercato Elfi Boschi + ricercato Orchi e Goblin", task: ["Ottieni Orchi"], cap: [4]},
+                {cond: "Ricercato Elfi Boschi + NON ricercato Halflings", task: ["Raccogli Mana"], cap: [5]},
+                {cond: "NON ricercato Municipio Elvenar + ricercato Halflings", task: ["Raccogli Semi"], cap: [6]},
+                {cond: "Ricercato Municipio Elvenar", task: ["Raccogli Unurium"], cap: [7]}
+            ]},
+            {seq: 14, ep: null, inizia: "completata 13", task: ["Crea Incantesimi [3]", "Accetta offerte dal Grossista [4]"], ev: 50, cap: [], branch: false},
+            {seq: 15, ep: null, inizia: "completata 14", task: ["Produci Beni di Base da 9h [4]", "Usa Istanti Materiali [1]"], ev: 50, cap: [], branch: false},
+            {seq: 16, ep: null, inizia: "completata 15", task: ["Produci Cesti di cibo [4] O Migliora liv. 5+ [2]", "Spendi Punti Conoscenza [8]"], ev: 50, cap: [], branch: false},
+            {seq: 17, ep: null, inizia: "completata 16", task: ["Produci buona somma Beni Base"], ev: 51, cap: [8], branch: true, branches: [
+                {cond: "NON ricercato Meraviglie Antiche Halflings", task: ["Produci Beni Base"], cap: []},
+                {cond: "Ricercato Meraviglie Antiche Halflings", task: ["Raccogli Semi"], cap: [8]}
+            ]},
+            {seq: 18, ep: null, inizia: "completata 17", task: ["Usa Istanti Tempo [1]", "Ottieni grande somma Monete"], ev: 51, cap: [], branch: false},
+            {seq: 19, ep: null, inizia: "completata 18", task: ["Produci Materiali per i tuoi abitanti"], ev: 51, cap: [9], branch: true, branches: [
+                {cond: "NON ricercato Meraviglie Antiche Elementali", task: ["Produci Materiali abitanti"], cap: []},
+                {cond: "Ricercato Meraviglie Antiche Elementali", task: ["Produci Beni Base"], cap: [9]}
+            ]},
+            {seq: 20, ep: null, inizia: "completata 19", task: ["Produci Pane [6]", "Piazza offerte [3]"], ev: 52, cap: [], branch: false},
+            {seq: 21, ep: null, inizia: "completata 20", task: ["Crea Incantesimi [3]"], ev: 52, cap: [3], branch: true, branches: [
+                {cond: "NON ricercato Artigianato", task: ["Crea Incantesimi [3]"], cap: []},
+                {cond: "Ricercato Artigianato", task: ["Ottieni Catalizzatori Combinanti [4]"], cap: [3]}
+            ]},
+            {seq: 22, ep: null, inizia: "completata 21", task: ["Ricerca Tecnologie [1] O Usa Cibo animali [1]", "Produci Beni Base da 9h [7]"], ev: 52, cap: [], branch: false},
+            {seq: 23, ep: null, inizia: "completata 22", task: ["Migliora liv. 5+ [2] O Completa Provincia [1]", "Produci buona somma Beni Base"], ev: 53, cap: [], branch: false},
+            {seq: 24, ep: null, inizia: "completata 23", task: ["Ottieni o usa Incantesimi [9]", "Ottieni Cimeli [12]"], ev: 53, cap: [], branch: false},
+            {seq: 25, ep: null, inizia: "completata 24", task: ["Produci buona somma Beni a scelta"], ev: 54, cap: [9, 10, 19], branch: true, branches: [
+                {cond: "NON ricercato Meraviglie Antiche Elementali", task: ["Produci Beni"], cap: []},
+                {cond: "Ricercato Elementali + NON ricercato Caserme [19]", task: ["Raccogli Beni Senzienti"], cap: [10]},
+                {cond: "Ricercato Caserme Preparate [19]", task: ["Raccogli Beni Ascesi"], cap: [19]}
+            ]},
+            {seq: 26, ep: null, inizia: "completata 25", task: ["Negozia Incontri [5] O Combatti Incontri [4]", "Produci Attrezzi Complessi [6]"], ev: 54, cap: [], branch: false},
+            {seq: 27, ep: null, inizia: "completata 26", task: ["Ricerca Tecnologie [1] O Addestra unità", "Produci Bevande [12]"], ev: 54, cap: [], branch: false},
+            {seq: 28, ep: null, inizia: "completata 27", task: ["Produci Beni Base da 3h [8]", "Produci Materiali per abitanti"], ev: 55, cap: [], branch: false},
+            {seq: 29, ep: null, inizia: "completata 28", task: ["Accetta offerte Grossista [4]", "Produci Materiali mercato locale"], ev: 55, cap: [], branch: false},
+            {seq: 30, ep: null, inizia: "completata 29", task: ["Produci Beni Base da 9h [5]", "Compra Punti Conoscenza [12]"], ev: 55, cap: [], branch: false},
+            {seq: 31, ep: null, inizia: "completata 30", task: ["Usa Cibo animali [1] O Esplora Provincie [1]", "Usa Incantesimi [10]"], ev: 56, cap: [], branch: false},
+            {seq: 32, ep: null, inizia: "completata 31", task: ["Produci buona somma Beni a scelta"], ev: 56, cap: [4, 5, 6, 7], branch: true, branches: [
+                {cond: "NON ricercato Meraviglie Antiche Orchi e Goblin", task: ["Produci Beni"], cap: []},
+                {cond: "NON ricercato Elfi + ricercato Orchi e Goblin", task: ["Ottieni Orchi"], cap: [4]},
+                {cond: "Ricercato Elfi + NON ricercato Halflings", task: ["Raccogli Mana"], cap: [5]},
+                {cond: "NON ricercato Municipio + ricercato Halflings", task: ["Raccogli Semi"], cap: [6]},
+                {cond: "Ricercato Municipio Elvenar", task: ["Raccogli Unurium"], cap: [7]}
+            ]},
+            {seq: 33, ep: null, inizia: "completata 32", task: ["Produci Cesti [4] O Addestra unità", "Produci Attrezzi Semplici [14]"], ev: 56, cap: [], branch: false},
+            {seq: 34, ep: null, inizia: "completata 33", task: ["Ottieni Cimeli [16]", "Usa Istanti [4]"], ev: 57, cap: [], branch: false},
+            {seq: 35, ep: null, inizia: "completata 34", task: ["Spendi Punti Conoscenza [16]"], ev: 57, cap: [3], branch: true, branches: [
+                {cond: "NON ricercato Artigianato", task: ["Spendi Punti Conoscenza [16]"], cap: []},
+                {cond: "Ricercato Artigianato", task: ["Ottieni Frammenti Incantesimi [1000]"], cap: [3]}
+            ]},
+            {seq: 36, ep: null, inizia: "completata 35", task: ["Negozia Incontri [5] O Completa Provincia [1]", "Produci buona somma Beni Base"], ev: 57, cap: [], branch: false},
+            {seq: 37, ep: null, inizia: "completata 36", task: ["Produci buona somma Beni a scelta"], ev: 58, cap: [9, 10, 19], branch: true, branches: [
+                {cond: "NON ricercato Meraviglie Antiche Elementali", task: ["Produci Beni"], cap: []},
+                {cond: "Ricercato Elementali + NON ricercato Caserme [19]", task: ["Raccogli Beni Senzienti"], cap: [10]},
+                {cond: "Ricercato Caserme Preparate [19]", task: ["Raccogli Beni Ascesi"], cap: [19]}
+            ]},
+            {seq: 38, ep: null, inizia: "completata 37", task: ["Produci Materiali per lavoratori", "Accetta offerte Grossista [4]"], ev: 58, cap: [], branch: false},
+            {seq: 39, ep: null, inizia: "completata 38", task: ["Crea Incantesimi [3]"], ev: 58, cap: [3], branch: true, branches: [
+                {cond: "NON ricercato Artigianato", task: ["Crea Incantesimi [3]"], cap: []},
+                {cond: "Ricercato Artigianato", task: ["Ottieni Catalizzatori Combinanti [4]"], cap: [3]}
+            ]},
+            {seq: 40, ep: null, inizia: "completata 39", task: ["Produci Materiali per abitanti", "Ottieni grande somma Monete"], ev: 59, cap: [], branch: false},
+            {seq: 41, ep: null, inizia: "completata 40", task: ["Combatti Incontri [5] O Produci Cesti [4]", "Accetta offerte altri giocatori [3]"], ev: 59, cap: [], branch: false},
+            {seq: 42, ep: null, inizia: "completata 41", task: ["Produci buona somma Beni a scelta"], ev: 59, cap: [9, 10], branch: true, branches: [
+                {cond: "NON ricercato Meraviglie Antiche Elementali", task: ["Produci Beni"], cap: []},
+                {cond: "Ricercato Meraviglie Antiche Elementali", task: ["Raccogli Beni Senzienti"], cap: [10]}
+            ]},
+            {seq: 43, ep: null, inizia: "completata 42", task: ["Usa Istanti Monete [2]", "Produci buona somma Beni Base"], ev: 60, cap: [], branch: false},
+            {seq: 44, ep: null, inizia: "completata 43", task: ["Spendi Punti Conoscenza [16]"], ev: 60, cap: [3], branch: true, branches: [
+                {cond: "NON ricercato Artigianato", task: ["Spendi Punti Conoscenza [16]"], cap: []},
+                {cond: "Ricercato Artigianato", task: ["Ottieni Frammenti Incantesimi [1000]"], cap: [3]}
+            ]},
+            {seq: 45, ep: null, inizia: "completata 44", task: ["Produci Pane [12]", "Crea Incantesimi [4]"], ev: 60, cap: [], branch: false},
+            {seq: 46, ep: null, inizia: "completata 45", task: ["Ottieni o usa Incantesimi [12]", "Usa Istanti Materiali [2]"], ev: 61, cap: [], branch: false},
+            {seq: 47, ep: null, inizia: "completata 46", task: ["Spendi Punti Conoscenza [20]"], ev: 61, cap: [4], branch: true, branches: [
+                {cond: "NON ricercato Meraviglie Antiche Segrete", task: ["Spendi Punti Conoscenza [20]"], cap: []},
+                {cond: "Ricercato Meraviglie Antiche Segrete", task: ["Investi in una Meraviglia Antica [30]"], cap: [4]}
+            ]},
+            {seq: 48, ep: null, inizia: "completata 47", task: ["Completa Provincia [1] O Negozia Incontri [6]", "Risolvi incontri Provincia, Torneo e/o Guglia [9]"], ev: 61, cap: [], branch: false},
+            {seq: 49, ep: null, inizia: "completata 48", task: ["Produci Cesti [6] O Combatti Incontri [5]", "Produci buona somma Beni Base"], ev: 62, cap: [], branch: false},
+            {seq: 50, ep: null, inizia: "completata 49", task: ["Compra Punti Conoscenza [9]", "Fornisci Aiuto vicinato [12]"], ev: 62, cap: [], branch: false},
+            {seq: 51, ep: null, inizia: "completata 50", task: ["Usa Istanti Monete [2]", "Produci Attrezzi Semplici [14]"], ev: 62, cap: [], branch: false},
+            {seq: 52, ep: null, inizia: "completata 51", task: ["Produci buona somma Beni a scelta"], ev: 63, cap: [4, 5, 6, 7], branch: true, branches: [
+                {cond: "NON ricercato Meraviglie Antiche Orchi e Goblin", task: ["Produci Beni"], cap: []},
+                {cond: "NON ricercato Elfi + ricercato Orchi e Goblin", task: ["Ottieni Orchi"], cap: [4]},
+                {cond: "Ricercato Elfi + NON ricercato Halflings", task: ["Raccogli Mana"], cap: [5]},
+                {cond: "NON ricercato Municipio + ricercato Halflings", task: ["Raccogli Semi"], cap: [6]},
+                {cond: "Ricercato Municipio Elvenar", task: ["Raccogli Unurium"], cap: [7]}
+            ]},
+            {seq: 53, ep: null, inizia: "completata 52", task: ["Completa Provincia [1] O Negozia Incontri [6]", "Produci Beni Base da 9h [5]"], ev: 63, cap: [], branch: false},
+            {seq: 54, ep: null, inizia: "completata 53", task: ["Produci Bevande [16]", "Ottieni o usa Incantesimi [9]"], ev: 63, cap: [], branch: false},
+            {seq: 55, ep: null, inizia: "completata 54", task: ["Produci buona somma Beni Base"], ev: 64, cap: [4], branch: true, branches: [
+                {cond: "NON ricercato Meraviglie Antiche Orchi e Goblin", task: ["Produci Beni Base"], cap: []},
+                {cond: "Ricercato Meraviglie Antiche Orchi e Goblin", task: ["Ottieni Orchi"], cap: [4]}
+            ]},
+            {seq: 56, ep: null, inizia: "completata 55", task: ["Produci Cesti [6] O Combatti Incontri [5]", "Produci Pane [15]"], ev: 64, cap: [], branch: false},
+            {seq: 57, ep: null, inizia: "completata 56", task: ["Produci buona somma Beni Base"], ev: 64, cap: [7], branch: true, branches: [
+                {cond: "NON ricercato Municipio Elvenar", task: ["Produci Beni Base"], cap: []},
+                {cond: "Ricercato Municipio Elvenar", task: ["Raccogli Unurium"], cap: [7]}
+            ]},
+            {seq: 58, ep: null, inizia: "completata 57", task: ["Ottieni grande somma Monete O Completa Provincia [1]", "Produci Attrezzi Complessi [10]"], ev: 65, cap: [], branch: false},
+            {seq: 59, ep: null, inizia: "completata 58", task: ["Produci buona somma Beni a scelta"], ev: 65, cap: [9, 10], branch: true, branches: [
+                {cond: "NON ricercato Meraviglie Antiche Elementali", task: ["Produci Beni"], cap: []},
+                {cond: "Ricercato Meraviglie Antiche Elementali", task: ["Raccogli Beni Senzienti"], cap: [10]}
+            ]},
+            {seq: 60, ep: null, inizia: "completata 59", task: ["Ottieni Cimeli [20]", "Piazza offerte [7]"], ev: 65, cap: [], branch: false},
+            {seq: 61, ep: 1, inizia: "completata 60", task: ["Produci Beni Base da 3h [13]", "Risolvi incontri Provincia, Torneo e/o Guglia [12]"], ev: 66, cap: [], branch: false},
+            {seq: 62, ep: 2, inizia: "completata 61", task: ["Spendi Punti Conoscenza [20]"], ev: 66, cap: [3], branch: true, branches: [
+                {cond: "NON ricercato Artigianato", task: ["Spendi Punti Conoscenza [20]"], cap: []},
+                {cond: "Ricercato Artigianato", task: ["Ottieni Frammenti Incantesimi [1250]"], cap: [3]}
+            ]},
+            {seq: 63, ep: 3, inizia: "completata 62", task: ["Usa Incantesimi [13]", "Produci Attrezzi Semplici [17]"], ev: 66, cap: [], branch: false},
+            {seq: 64, ep: 4, inizia: "completata 63", task: ["Produci buona somma Beni Base", "Usa Istanti Tempo [2]"], ev: 67, cap: [], branch: false},
+            {seq: 65, ep: 5, inizia: "completata 64", task: ["Produci buona somma Beni a scelta"], ev: 67, cap: [9, 10, 19], branch: true, branches: [
+                {cond: "NON ricercato Meraviglie Antiche Elementali", task: ["Produci Beni"], cap: []},
+                {cond: "Ricercato Elementali + NON ricercato Caserme [19]", task: ["Raccogli Beni Senzienti"], cap: [10]},
+                {cond: "Ricercato Caserme Preparate [19]", task: ["Raccogli Beni Ascesi"], cap: [19]}
+            ]},
+            {seq: 66, ep: 6, inizia: "completata 65", task: ["Combatti Incontri [7] O Produci Materiali lavoratori", "Compra Punti Conoscenza [15]"], ev: 67, cap: [], branch: false},
+            {seq: 67, ep: 7, inizia: "completata 66", task: ["Accetta offerte Grossista [6]", "Produci Beni Base da 3h [13]"], ev: 68, cap: [], branch: false},
+            {seq: 68, ep: 8, inizia: "completata 67", task: ["Produci Bevande [20]", "Piazza offerte [7]"], ev: 68, cap: [], branch: false},
+            {seq: 69, ep: 9, inizia: "completata 68", task: ["Crea Incantesimi [5]"], ev: 68, cap: [3], branch: true, branches: [
+                {cond: "NON ricercato Artigianato", task: ["Crea Incantesimi [5]"], cap: []},
+                {cond: "Ricercato Artigianato", task: ["Ottieni Catalizzatori Combinanti [6]"], cap: [3]}
+            ]},
+            {seq: 70, ep: 10, inizia: "completata 69", task: ["Spendi Punti Conoscenza [20]"], ev: 69, cap: [], branch: false},
+            {seq: 71, ep: 11, inizia: "completata 70", task: ["Produci buona somma Beni Base"], ev: 69, cap: [5], branch: true, branches: [
+                {cond: "NON ricercato Meraviglie Antiche Elfi Boschi", task: ["Produci Beni Base"], cap: []},
+                {cond: "Ricercato Meraviglie Antiche Elfi Boschi", task: ["Raccogli Mana"], cap: [5]}
+            ]},
+            {seq: 72, ep: 12, inizia: "completata 71", task: ["Produci Materiali mercato locale"], ev: 69, cap: [], branch: false},
+            {seq: 73, ep: 13, inizia: "completata 72", task: ["Produci buona somma Beni Base"], ev: 70, cap: [7], branch: true, branches: [
+                {cond: "NON ricercato Municipio Elvenar", task: ["Produci Beni Base"], cap: []},
+                {cond: "Ricercato Municipio Elvenar", task: ["Raccogli Unurium"], cap: [7]}
+            ]},
+            {seq: 74, ep: 14, inizia: "completata 73", task: ["Ottieni grande somma Monete"], ev: 70, cap: [], branch: false},
+            {seq: 75, ep: 15, inizia: "completata 74", task: ["Ottieni Cimeli [20]", "Ottieni o usa Incantesimi [15]"], ev: 71, cap: [], branch: false},
+            {seq: 76, ep: 16, inizia: "completata 75", task: ["Produci Beni Base da 3h [13] O Produci Attrezzi Semplici [17]", "Accetta offerte Grossista [6]"], ev: 71, cap: [], branch: false},
+            {seq: 77, ep: 17, inizia: "completata 76", task: ["Produci buona somma Beni a scelta"], ev: 71, cap: [4, 5, 6, 7], branch: true, branches: [
+                {cond: "NON ricercato Meraviglie Antiche Orchi e Goblin", task: ["Produci Beni"], cap: []},
+                {cond: "NON ricercato Elfi + ricercato Orchi e Goblin", task: ["Ottieni Orchi"], cap: [4]},
+                {cond: "Ricercato Elfi + NON ricercato Halflings", task: ["Raccogli Mana"], cap: [5]},
+                {cond: "NON ricercato Municipio + ricercato Halflings", task: ["Raccogli Semi"], cap: [6]},
+                {cond: "Ricercato Municipio Elvenar", task: ["Raccogli Unurium"], cap: [7]}
+            ]},
+            {seq: 78, ep: 18, inizia: "completata 77", task: ["Produci Pane [15]"], ev: 72, cap: [], branch: false},
+            {seq: 79, ep: 19, inizia: "completata 78", task: ["Produci buona somma Beni Base"], ev: 72, cap: [4], branch: true, branches: [
+                {cond: "NON ricercato Meraviglie Antiche Orchi e Goblin", task: ["Produci Beni Base"], cap: []},
+                {cond: "Ricercato Meraviglie Antiche Orchi e Goblin", task: ["Ottieni Orchi"], cap: [4]}
+            ]},
+            {seq: 80, ep: 20, inizia: "completata 79", task: ["Compra Punti Conoscenza [15] O Produci Materiali abitanti", "Crea Incantesimi [5]"], ev: 72, cap: [], branch: false}
+        ];
 
-const datiMissioni = [
-    {seq:1, ep:null, inizia:"inizia evento", task:["Piazza offerte [3]"], ev:45, cap:[], branch:false},
-    {seq:2, ep:null, inizia:"completata 1", task:["Compra Punti Conoscenza [6]"], ev:46, cap:[], branch:false},
-    {seq:3, ep:null, inizia:"completata 2", task:["Fornisci Aiuto del vicinato [8]"], ev:46, cap:[], branch:false},
-    {seq:4, ep:null, inizia:"completata 3", task:["Risolvi incontri Provincia, Torneo e/o Guglia [5]"], ev:46, cap:[], branch:false},
-    {seq:5, ep:null, inizia:"completata 4", task:["Spendi Punti Conoscenza [4]"], ev:47, cap:[], branch:false},
-    {seq:6, ep:null, inizia:"completata 5", task:[], ev:47, cap:[3], branch:true, branches:[
-        {cond:"E NON ricercato Artigianato", task:["Produci Beni a scelta con l'opzione da 9h [3]"]},
-        {cond:"E ricercato Artigianato", task:["Ottieni Vapori di Visione [12]"], cap:[3]}
-    ]},
-    {seq:7, ep:null, inizia:"completata 6", task:["Usa Istanti Tempo [1]", "Accetta offerte di altri giocatori [3]"], ev:47, cap:[], branch:false},
-    {seq:8, ep:null, inizia:"completata 7", task:["Addestra una buona somma di unità OPPURE Esplora Provincie [1]", "Produci Bevande [12]"], ev:48, cap:[], branch:false},
-    {seq:9, ep:null, inizia:"completata 8", task:["Produci Beni di Base a scelta con l'opzione da 9h [5]", "Produci Materiali per il mercato locale"], ev:48, cap:[], branch:false},
-    {seq:10, ep:null, inizia:"completata 9", task:["Usa Cibo per animali [1] OPPURE Negozia Incontri Provincia [3]", "Fornisci Aiuto del vicinato [12]"], ev:48, cap:[], branch:false},
-    {seq:11, ep:null, inizia:"completata 10", task:["Spendi Punti Conoscenza [8]", "Usa Istanti Tempo [1]"], ev:49, cap:[], branch:false},
-    {seq:12, ep:null, inizia:"completata 11", task:["Usa Istanti [4]", "Ottieni o usa Incantesimi [9]"], ev:49, cap:[], branch:false},
-    {seq:13, ep:null, inizia:"completata 12", task:[], ev:49, cap:[8,9,11,15], branch:true, branches:[
-        {cond:"E NON ricercato Meraviglie Orchi e Goblin", task:["Produci una buona somma di Beni a scelta"]},
-        {cond:"E NON ricercato Elfi dei Boschi + E ricercato Orchi e Goblin", task:["Ottieni una buona somma di Orchi"], cap:[8]},
-        {cond:"E ricercato Elfi dei Boschi + E NON ricercato Halflings", task:["Raccogli Mana"], cap:[9]},
-        {cond:"E NON ricercato Municipio + E ricercato Halflings", task:["Raccogli Semi"], cap:[11]},
-        {cond:"E ricercato Municipio", task:["Raccogli Unurium"], cap:[15]}
-    ]},
-    {seq:14, ep:null, inizia:"completata 13", task:["Crea Incantesimi [3]", "Accetta offerte dal Grossista [4]"], ev:50, cap:[], branch:false},
-    {seq:15, ep:null, inizia:"completata 14", task:["Produci Beni di Base a scelta con l'opzione da 9h [4]", "Usa Istanti Materiali [1]"], ev:50, cap:[], branch:false},
-    {seq:16, ep:null, inizia:"completata 15", task:["Produci Cesti di cibo [4] OPPURE Migliora edifici a liv. 5 o superiore [2]", "Spendi Punti Conoscenza [8]"], ev:50, cap:[], branch:false},
-    {seq:17, ep:null, inizia:"completata 16", task:[], ev:51, cap:[11], branch:true, branches:[
-        {cond:"E NON ricercato Meraviglie Halflings", task:["Produci una buona somma di Beni di Base"]},
-        {cond:"E ricercato Meraviglie Halflings", task:["Raccogli Semi"], cap:[11]}
-    ]},
-    {seq:18, ep:null, inizia:"completata 17", task:["Usa Istanti Tempo [1]", "Ottieni una grande somma di Monete"], ev:51, cap:[], branch:false},
-    {seq:19, ep:null, inizia:"completata 18", task:[], ev:51, cap:[13], branch:true, branches:[
-        {cond:"E NON ricercato Meraviglie Elementali", task:["Produci Materiali per i tuoi abitanti"]},
-        {cond:"E ricercato Meraviglie Elementali", task:["Produci una buona somma di Beni di Base"], cap:[13]}
-    ]},
-    {seq:20, ep:null, inizia:"completata 19", task:["Produci Pane [6]", "Piazza offerte [3]"], ev:52, cap:[], branch:false},
-    {seq:21, ep:null, inizia:"completata 20", task:[], ev:52, cap:[3], branch:true, branches:[
-        {cond:"E NON ricercato Artigianato", task:["Crea Incantesimi [3]"]},
-        {cond:"E ricercato Artigianato", task:["Ottieni Catalizzatori Combinanti [4]"], cap:[3]}
-    ]},
-    {seq:22, ep:null, inizia:"completata 21", task:["Ricerca Tecnologie [1] OPPURE Usa Cibo per animali [1]", "Produci Beni di Base a scelta con l'opzione da 9h [7]"], ev:52, cap:[], branch:false},
-    {seq:23, ep:null, inizia:"completata 22", task:["Migliora edifici a liv. 5 o superiore [2] OPPURE Completa una Provincia [1]", "Produci una buona somma di Beni di Base"], ev:53, cap:[], branch:false},
-    {seq:24, ep:null, inizia:"completata 23", task:["Ottieni o usa Incantesimi [9]", "Ottieni Cimeli [12]"], ev:53, cap:[], branch:false},
-    {seq:25, ep:null, inizia:"completata 24", task:[], ev:54, cap:[13,19], branch:true, branches:[
-        {cond:"E NON ricercato Meraviglie Elementali", task:["Produci una buona somma di Beni a scelta"]},
-        {cond:"E ricercato Meraviglie Elementali + E NON ricercato Caserme Preparate", task:["Raccogli una buona somma di Beni Senzienti a scelta"], cap:[13]},
-        {cond:"E ricercato Caserme Preparate", task:["Raccogli una buona somma di Beni Ascesi a scelta"], cap:[19]}
-    ]},
-    {seq:26, ep:null, inizia:"completata 25", task:["Negozia Incontri Provincia [5] OPPURE Combatti e vinci Incontri Provincia [4]", "Produci Attrezzi Complessi [6]"], ev:54, cap:[], branch:false},
-    {seq:27, ep:null, inizia:"completata 26", task:["Ricerca Tecnologie [1] OPPURE Addestra una buona somma di unità", "Produci Bevande [12]"], ev:54, cap:[], branch:false},
-    {seq:28, ep:null, inizia:"completata 27", task:["Produci Beni di Base a scelta con l'opzione da 3h [8]", "Produci Materiali per i tuoi abitanti"], ev:55, cap:[], branch:false},
-    {seq:29, ep:null, inizia:"completata 28", task:["Accetta offerte dal Grossista [4]", "Produci Materiali per il mercato locale"], ev:55, cap:[], branch:false},
-    {seq:30, ep:null, inizia:"completata 29", task:["Produci Beni di Base a scelta con l'opzione da 9h [5]", "Compra Punti Conoscenza [12]"], ev:55, cap:[], branch:false},
-    {seq:31, ep:null, inizia:"completata 30", task:["Usa Cibo per animali [1] OPPURE Esplora Provincie [1]", "Usa Incantesimi [10]"], ev:56, cap:[], branch:false},
-    {seq:32, ep:null, inizia:"completata 31", task:[], ev:56, cap:[8,9,11,15], branch:true, branches:[
-        {cond:"E NON ricercato Meraviglie Orchi e Goblin", task:["Produci una buona somma di Beni a scelta"]},
-        {cond:"E NON ricercato Elfi dei Boschi + E ricercato Orchi e Goblin", task:["Ottieni una buona somma di Orchi"], cap:[8]},
-        {cond:"E ricercato Elfi dei Boschi + E NON ricercato Halflings", task:["Raccogli Mana"], cap:[9]},
-        {cond:"E NON ricercato Municipio + E ricercato Halflings", task:["Raccogli Semi"], cap:[11]},
-        {cond:"E ricercato Municipio", task:["Raccogli Unurium"], cap:[15]}
-    ]},
-    {seq:33, ep:null, inizia:"completata 32", task:["Produci Cesti di cibo [4] OPPURE Addestra una buona somma di unità", "Produci Attrezzi Semplici [14]"], ev:56, cap:[], branch:false},
-    {seq:34, ep:null, inizia:"completata 33", task:["Ottieni Cimeli [16]", "Usa Istanti [4]"], ev:57, cap:[], branch:false},
-    {seq:35, ep:null, inizia:"completata 34", task:[], ev:57, cap:[3], branch:true, branches:[
-        {cond:"E NON ricercato Artigianato", task:["Spendi Punti Conoscenza [16]"]},
-        {cond:"E ricercato Artigianato", task:["Ottieni Frammenti di Incantesimi [1000]"], cap:[3]}
-    ]},
-    {seq:36, ep:null, inizia:"completata 35", task:["Negozia Incontri Provincia [5] OPPURE Completa una Provincia [1]", "Produci una buona somma di Beni di Base"], ev:57, cap:[], branch:false},
-    {seq:37, ep:null, inizia:"completata 36", task:[], ev:58, cap:[13,19], branch:true, branches:[
-        {cond:"E NON ricercato Meraviglie Elementali", task:["Produci una buona somma di Beni a scelta"]},
-        {cond:"E ricercato Meraviglie Elementali + E NON ricercato Caserme Preparate", task:["Raccogli una buona somma di Beni Senzienti a scelta"], cap:[13]},
-        {cond:"E ricercato Caserme Preparate", task:["Raccogli una buona somma di Beni Ascesi a scelta"], cap:[19]}
-    ]},
-    {seq:38, ep:null, inizia:"completata 37", task:["Produci Materiali per i tuoi lavoratori", "Accetta offerte dal Grossista [4]"], ev:58, cap:[], branch:false},
-    {seq:39, ep:null, inizia:"completata 38", task:[], ev:58, cap:[3], branch:true, branches:[
-        {cond:"E NON ricercato Artigianato", task:["Crea Incantesimi [3]"]},
-        {cond:"E ricercato Artigianato", task:["Ottieni Catalizzatori Combinanti [4]"], cap:[3]}
-    ]},
-    {seq:40, ep:null, inizia:"completata 39", task:["Produci Materiali per i tuoi abitanti", "Ottieni una grande somma di Monete"], ev:59, cap:[], branch:false},
-    {seq:41, ep:null, inizia:"completata 40", task:["Combatti e vinci Incontri Provincia [5] OPPURE Produci Cesti di cibo [4]", "Accetta offerte di altri giocatori [3]"], ev:59, cap:[], branch:false},
-    {seq:42, ep:null, inizia:"completata 41", task:[], ev:59, cap:[13], branch:true, branches:[
-        {cond:"E NON ricercato Meraviglie Elementali", task:["Produci una buona somma di Beni a scelta"]},
-        {cond:"E ricercato Meraviglie Elementali", task:["Raccogli una buona somma di Beni Senzienti a scelta"], cap:[13]}
-    ]},
-    {seq:43, ep:null, inizia:"completata 42", task:["Usa Istanti Monete [2]", "Produci una buona somma di Beni di Base"], ev:60, cap:[], branch:false},
-    {seq:44, ep:null, inizia:"completata 43", task:[], ev:60, cap:[3], branch:true, branches:[
-        {cond:"E NON ricercato Artigianato", task:["Spendi Punti Conoscenza [16]"]},
-        {cond:"E ricercato Artigianato", task:["Ottieni Frammenti di Incantesimi [1000]"], cap:[3]}
-    ]},
-    {seq:45, ep:null, inizia:"completata 44", task:["Produci Pane [12]", "Crea Incantesimi [4]"], ev:60, cap:[], branch:false},
-    {seq:46, ep:null, inizia:"completata 45", task:["Ottieni o usa Incantesimi [12]", "Usa Istanti Materiali [2]"], ev:61, cap:[], branch:false},
-    {seq:47, ep:null, inizia:"completata 46", task:[], ev:61, cap:[4], branch:true, branches:[
-        {cond:"E NON ricercato Meraviglie Segrete", task:["Spendi Punti Conoscenza [20]"]},
-        {cond:"E ricercato Meraviglie Segrete", task:["Investi Punti Conoscenza in una Meraviglia Antica [30]"], cap:[4]}
-    ]},
-    {seq:48, ep:null, inizia:"completata 47", task:["Completa una Provincia [1] OPPURE Negozia Incontri Provincia [6]", "Risolvi incontri Provincia, Torneo e/o Guglia [9]"], ev:61, cap:[], branch:false},
-    {seq:49, ep:null, inizia:"completata 48", task:["Produci Cesti di cibo [6] OPPURE Combatti e vinci Incontri Provincia [5]", "Produci una buona somma di Beni di Base"], ev:62, cap:[], branch:false},
-    {seq:50, ep:null, inizia:"completata 49", task:["Compra Punti Conoscenza [9]", "Fornisci Aiuto del vicinato [12]"], ev:62, cap:[], branch:false},
-    {seq:51, ep:null, inizia:"completata 50", task:["Usa Istanti Monete [2]", "Produci Attrezzi Semplici [14]"], ev:62, cap:[], branch:false},
-    {seq:52, ep:null, inizia:"completata 51", task:[], ev:63, cap:[8,9,11,15], branch:true, branches:[
-        {cond:"E NON ricercato Meraviglie Orchi e Goblin", task:["Produci una buona somma di Beni a scelta"]},
-        {cond:"E NON ricercato Elfi dei Boschi + E ricercato Orchi e Goblin", task:["Ottieni una buona somma di Orchi"], cap:[8]},
-        {cond:"E ricercato Elfi dei Boschi + E NON ricercato Halflings", task:["Raccogli Mana"], cap:[9]},
-        {cond:"E NON ricercato Municipio + E ricercato Halflings", task:["Raccogli Semi"], cap:[11]},
-        {cond:"E ricercato Municipio", task:["Raccogli Unurium"], cap:[15]}
-    ]},
-    {seq:53, ep:null, inizia:"completata 52", task:["Completa una Provincia [1] OPPURE Negozia Incontri Provincia [6]", "Produci Beni di Base a scelta con l'opzione da 9h [5]"], ev:63, cap:[], branch:false},
-    {seq:54, ep:null, inizia:"completata 53", task:["Produci Bevande [16]", "Ottieni o usa Incantesimi [9]"], ev:63, cap:[], branch:false},
-    {seq:55, ep:null, inizia:"completata 54", task:[], ev:64, cap:[8], branch:true, branches:[
-        {cond:"E NON ricercato Meraviglie Orchi e Goblin", task:["Produci una buona somma di Beni di Base"]},
-        {cond:"E ricercato Meraviglie Orchi e Goblin", task:["Ottieni una buona somma di Orchi"], cap:[8]}
-    ]},
-    {seq:56, ep:null, inizia:"completata 55", task:["Produci Cesti di cibo [6] OPPURE Combatti e vinci Incontri Provincia [5]", "Produci Pane [15]"], ev:64, cap:[], branch:false},
-    {seq:57, ep:null, inizia:"completata 56", task:[], ev:64, cap:[15], branch:true, branches:[
-        {cond:"E NON ricercato Municipio", task:["Produci una buona somma di Beni di Base"]},
-        {cond:"E ricercato Municipio", task:["Raccogli Unurium"], cap:[15]}
-    ]},
-    {seq:58, ep:null, inizia:"completata 57", task:["Ottieni una grande somma di Monete OPPURE Completa una Provincia [1]", "Produci Attrezzi Complessi [10]"], ev:65, cap:[], branch:false},
-    {seq:59, ep:null, inizia:"completata 58", task:[], ev:65, cap:[13], branch:true, branches:[
-        {cond:"E NON ricercato Meraviglie Elementali", task:["Produci una buona somma di Beni a scelta"]},
-        {cond:"E ricercato Meraviglie Elementali", task:["Raccogli una buona somma di Beni Senzienti a scelta"], cap:[13]}
-    ]},
-    {seq:60, ep:null, inizia:"completata 59", task:["Ottieni Cimeli [20]", "Piazza offerte [7]"], ev:65, cap:[], branch:false},
-    {seq:61, ep:1, inizia:"completata 60", task:["Produci Beni di Base a scelta con l'opzione da 3h [13]", "Risolvi incontri Provincia, Torneo e/o Guglia [12]"], ev:66, cap:[], branch:false},
-    {seq:62, ep:2, inizia:"completata 61", task:[], ev:null, cap:[3], branch:true, branches:[
-        {cond:"E NON ricercato Artigianato", task:["Spendi Punti Conoscenza [20]"]},
-        {cond:"E ricercato Artigianato", task:["Ottieni Frammenti di Incantesimi [1250]"], cap:[3]}
-    ]},
-    {seq:62, ep:3, inizia:"completata 61", task:["Usa Incantesimi [13]", "Produci Attrezzi Semplici [17]"], ev:66, cap:[], branch:false},
-    {seq:63, ep:4, inizia:"completata 62", task:["Produci una buona somma di Beni di Base", "Usa Istanti Tempo [2]"], ev:67, cap:[], branch:false},
-    {seq:64, ep:5, inizia:"completata 63", task:[], ev:67, cap:[13,19], branch:true, branches:[
-        {cond:"E NON ricercato Meraviglie Elementali", task:["Produci una buona somma di Beni a scelta"]},
-        {cond:"E ricercato Meraviglie Elementali + E NON ricercato Caserme Preparate", task:["Raccogli una buona somma di Beni Senzienti a scelta"], cap:[13]},
-        {cond:"E ricercato Caserme Preparate", task:["Raccogli una buona somma di Beni Ascesi a scelta"], cap:[19]}
-    ]},
-    {seq:65, ep:6, inizia:"completata 64", task:["Combatti e vinci Incontri Provincia [7] OPPURE Produci Materiali per i tuoi lavoratori", "Compra Punti Conoscenza [15]"], ev:67, cap:[], branch:false},
-    {seq:66, ep:7, inizia:"completata 65", task:["Accetta offerte dal Grossista [6]", "Produci Beni di Base a scelta con l'opzione da 3h [13]"], ev:68, cap:[], branch:false},
-    {seq:67, ep:8, inizia:"completata 66", task:["Produci Bevande [20]", "Piazza offerte [7]"], ev:68, cap:[], branch:false},
-    {seq:68, ep:9, inizia:"completata 67", task:[], ev:68, cap:[3], branch:true, branches:[
-        {cond:"E NON ricercato Artigianato", task:["Crea Incantesimi [5]"]},
-        {cond:"E ricercato Artigianato", task:["Ottieni Catalizzatori Combinanti [6]"], cap:[3]}
-    ]},
-    {seq:69, ep:10, inizia:"completata 68", task:["Spendi Punti Conoscenza [20]"], ev:69, cap:[], branch:false},
-    {seq:70, ep:11, inizia:"completata 69", task:[], ev:69, cap:[9], branch:true, branches:[
-        {cond:"E NON ricercato Meraviglie Elfi dei Boschi", task:["Produci una buona somma di Beni di Base"]},
-        {cond:"E ricercato Meraviglie Elfi dei Boschi", task:["Raccogli Mana"], cap:[9]}
-    ]},
-    {seq:71, ep:12, inizia:"completata 70", task:["Produci Materiali per il mercato locale"], ev:69, cap:[], branch:false},
-    {seq:72, ep:13, inizia:"completata 71", task:[], ev:70, cap:[15], branch:true, branches:[
-        {cond:"E NON ricercato Municipio", task:["Produci una buona somma di Beni di Base"]},
-        {cond:"E ricercato Municipio", task:["Raccogli Unurium"], cap:[15]}
-    ]},
-    {seq:73, ep:14, inizia:"completata 72", task:["Ottieni una grande somma di Monete"], ev:70, cap:[], branch:false},
-    {seq:74, ep:15, inizia:"completata 73", task:["Ottieni Cimeli [20]", "Ottieni o usa Incantesimi [15]"], ev:71, cap:[], branch:false},
-    {seq:75, ep:16, inizia:"completata 74", task:["Produci Beni di Base a scelta con l'opzione da 3h [13] OPPURE Produci Attrezzi Semplici [17]", "Accetta offerte dal Grossista [6]"], ev:71, cap:[], branch:false},
-    {seq:76, ep:17, inizia:"completata 75", task:[], ev:71, cap:[8,9,11,15], branch:true, branches:[
-        {cond:"E NON ricercato Meraviglie Orchi e Goblin", task:["Produci una buona somma di Beni a scelta"]},
-        {cond:"E NON ricercato Elfi dei Boschi + E ricercato Orchi e Goblin", task:["Ottieni una buona somma di Orchi"], cap:[8]},
-        {cond:"E ricercato Elfi dei Boschi + E NON ricercato Halflings", task:["Raccogli Mana"], cap:[9]},
-        {cond:"E NON ricercato Municipio + E ricercato Halflings", task:["Raccogli Semi"], cap:[11]},
-        {cond:"E ricercato Municipio", task:["Raccogli Unurium"], cap:[15]}
-    ]},
-    {seq:77, ep:18, inizia:"completata 76", task:["Produci Pane [15]"], ev:72, cap:[], branch:false},
-    {seq:78, ep:19, inizia:"completata 77", task:[], ev:72, cap:[8], branch:true, branches:[
-        {cond:"E NON ricercato Meraviglie Orchi e Goblin", task:["Produci una buona somma di Beni di Base"]},
-        {cond:"E ricercato Meraviglie Orchi e Goblin", task:["Ottieni una buona somma di Orchi"], cap:[8]}
-    ]},
-    {seq:79, ep:20, inizia:"completata 78", task:["Compra Punti Conoscenza [15] OPPURE Produci Materiali per i tuoi abitanti", "Crea Incantesimi [5]"], ev:72, cap:[], branch:false},
-    {seq:80, ep:21, inizia:"completata 79", task:[], ev:null, cap:[], branch:false}
-];
+        // ===== VARIABILI GLOBALI =====
+        let completate = [];
+        let filtroAttivo = {ricerca: '', capitolo: '', stato: ''};
 
-function caricaProgresso() {
-    const saved = localStorage.getItem('zeraphisProgress');
-    return saved ? JSON.parse(saved) : [];
-}
-
-function salvaProgresso(completate) {
-    localStorage.setItem('zeraphisProgress', JSON.stringify(completate));
-    aggiornaStats();
-}
-
-function toggleMissione(idx) {
-    let completate = caricaProgresso();
-    const pos = completate.indexOf(idx);
-    pos > -1 ? completate.splice(pos, 1) : completate.push(idx);
-    salvaProgresso(completate);
-    renderTable();
-}
-
-function resetProgress() {
-    if(confirm('Resettare tutto il progresso?')) {
-        localStorage.removeItem('zeraphisProgress');
-        aggiornaStats();
-        renderTable();
-    }
-}
-
-function aggiornaStats() {
-    const completate = caricaProgresso();
-    const perc = Math.round((completate.length / datiMissioni.length) * 100);
-    document.getElementById('completateVal').textContent = completate.length;
-    document.getElementById('progressVal').textContent = perc + '%';
-}
-
-function renderLegenda() {
-    const leg = document.getElementById('legendContainer');
-    leg.innerHTML = '';
-    capitoli.forEach(c => {
-        if(c.nome) {
-            const item = document.createElement('div');
-            item.className = 'legend-item';
-            item.innerHTML = `<img src="${c.icona}" alt="Cap ${c.num}"> Cap. ${c.num}: ${c.nome}`;
-            leg.appendChild(item);
+        // ===== FUNZIONI LOCALSTORAGE =====
+        function caricaProgresso() {
+            const saved = localStorage.getItem('zeraphisProgress');
+            return saved ? JSON.parse(saved) : [];
         }
-    });
-}
 
-function getCapIconi(caps) {
-    return caps.map(c => {
-        const cap = capitoli.find(x => x.num === c);
-        return cap ? `<img src="${cap.icona}" alt="Cap ${c}" style="width:20px; height:20px; margin:2px;">` : '';
-    }).join('');
-}
+        function salvaProgresso(arr) {
+            localStorage.setItem('zeraphisProgress', JSON.stringify(arr));
+            aggiornaStats();
+            const now = new Date().toLocaleTimeString('it-IT');
+            document.getElementById('saveTime').textContent = `Salvato: ${now}`;
+        }
 
-function renderTable() {
-    const completate = caricaProgresso();
-    const filtro = document.getElementById('filtroCapitolo').value;
-    const ricerca = document.getElementById('cercaMissione').value.toLowerCase();
-    const body = document.getElementById('missioniBody');
-    body.innerHTML = '';
-    
-    datiMissioni.forEach((m, idx) => {
-        let mostra = true;
-        if(filtro && !m.cap.includes(parseInt(filtro))) mostra = false;
-        if(ricerca && !m.seq.toString().includes(ricerca)) mostra = false;
-        
-        if(!mostra) return;
-        
-        const checked = completate.includes(idx);
-        const row = document.createElement('tr');
-        row.className = checked ? 'completata' : '';
-        
-        const taskHtml = m.task.map((t, i) => `<div class="task-item">Task ${i+1}: ${t}</div>`).join('');
-        const capHtml = getCapIconi(m.cap);
-        
-        row.innerHTML = `
-            <td><input type="checkbox" class="checkbox" ${checked ? 'checked' : ''} onchange="toggleMissione(${idx})" /></td>
-            <td class="missione-num">${m.seq}</td>
-            <td>${m.ep || '—'}</td>
-            <td><span class="ev-badge">${m.ev || '—'}</span></td>
-            <td><small>${m.inizia}</small></td>
-            <td>${m.branch ? '<span class="branch-indicator"></span>' : ''}${taskHtml || '(Vedi branch)'}</td>
-            <td style="font-size:12px;">${capHtml || '—'}</td>
-        `;
-        body.appendChild(row);
-        
-        if(m.branch && m.branches) {
-            m.branches.forEach(b => {
-                const branchRow = document.createElement('tr');
-                branchRow.className = 'branch-row';
-                const branchTaskHtml = b.task.map((t, i) => `<div class="task-item">Task ${i+1}: ${t}</div>`).join('');
-                const branchCapHtml = getCapIconi(b.cap || []);
-                branchRow.innerHTML = `
-                    <td></td>
-                    <td colspan="2" style="font-size:11px; color:#8b949e;"><em>└─ ${b.cond}</em></td>
-                    <td></td>
-                    <td></td>
-                    <td>${branchTaskHtml}</td>
-                    <td>${branchCapHtml || '—'}</td>
+        // ===== FUNZIONI UI =====
+        function aggiornaStats() {
+            const tot = datiMissioni.length;
+            const comp = completate.length;
+            const perc = tot > 0 ? Math.round((comp / tot) * 100) : 0;
+            
+            document.getElementById('completateVal').textContent = comp;
+            document.getElementById('totaliVal').textContent = tot;
+            document.getElementById('progressVal').textContent = perc + '%';
+        }
+
+        function toggleMissione(idx) {
+            const pos = completate.indexOf(idx);
+            if (pos > -1) {
+                completate.splice(pos, 1);
+            } else {
+                completate.push(idx);
+            }
+            salvaProgresso(completate);
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            datiMissioni.forEach((m, idx) => {
+                // Filtri
+                if (filtroAttivo.ricerca && !m.seq.toString().includes(filtroAttivo.ricerca)) return;
+                if (filtroAttivo.capitolo && !m.cap.includes(parseInt(filtroAttivo.capitolo))) return;
+                if (filtroAttivo.stato === 'completata' && !completate.includes(idx)) return;
+                if (filtroAttivo.stato === 'incomplete' && completate.includes(idx)) return;
+
+                // Riga principale
+                const tr = document.createElement('tr');
+                if (completate.includes(idx)) tr.classList.add('completata');
+
+                const chkHtml = `<input type="checkbox" ${completate.includes(idx) ? 'checked' : ''} onchange="toggleMissione(${idx})">`;
+                const epHtml = m.ep ? m.ep : '';
+                const taskHtml = m.task.map(t => `<div class="task-item">${t}</div>`).join('');
+                const capHtml = m.cap.length > 0 ? m.cap.map(c => `<div class="cap-badge">${c}</div>`).join('') : '';
+                const evHtml = m.ev ? `<div class="ev-badge">${m.ev}</div>` : '';
+
+                tr.innerHTML = `
+                    <td style="text-align: center;">${chkHtml}</td>
+                    <td><strong>${m.seq}</strong></td>
+                    <td>${epHtml}</td>
+                    <td>${m.inizia}</td>
+                    <td><div class="task-container">${taskHtml}</div></td>
+                    <td><div class="capitoli">${capHtml}</div></td>
+                    <td style="text-align: center;">${evHtml}</td>
                 `;
-                body.appendChild(branchRow);
+                tbody.appendChild(tr);
+
+                // Branch rows
+                if (m.branch && m.branches) {
+                    m.branches.forEach(b => {
+                        const branchTr = document.createElement('tr');
+                        branchTr.classList.add('branch-row');
+                        if (completate.includes(idx)) branchTr.classList.add('completata');
+
+                        const branchTaskHtml = b.task.map(t => `<div class="task-item">${t}</div>`).join('');
+                        const branchCapHtml = b.cap.length > 0 ? b.cap.map(c => `<div class="cap-badge">${c}</div>`).join('') : '';
+
+                        branchTr.innerHTML = `
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td><em style="color: var(--text-secondary);">${b.cond}</em></td>
+                            <td><div class="task-container">${branchTaskHtml}</div></td>
+                            <td><div class="capitoli">${branchCapHtml}</div></td>
+                            <td></td>
+                        `;
+                        tbody.appendChild(branchTr);
+                    });
+                }
             });
         }
-    });
-}
 
-function exportPDF() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    const completate = caricaProgresso();
-    const data = [];
-    
-    datiMissioni.forEach((m, idx) => {
-        data.push([m.seq, m.ep || '—', completate.includes(idx) ? '✓' : '', m.ev || '—', m.inizia, m.task[0] || '(Branch)']);
-    });
-    
-    doc.setFontSize(14);
-    doc.text('L\'evocazione di Zeraphis', 10, 10);
-    doc.setFontSize(10);
-    doc.text('Tracker Missioni - ' + new Date().toLocaleDateString('it-IT'), 10, 18);
-    doc.text('Completate: ' + completate.length + '/' + datiMissioni.length, 10, 24);
-    
-    doc.autoTable({
-        head: [['SEQ', 'EP', '✓', 'EV', 'Inizia', 'Task']],
-        body: data,
-        startY: 30,
-        fontSize: 7,
-        columnStyles: {0: {cellWidth: 12}, 1: {cellWidth: 10}, 2: {cellWidth: 8}, 3: {cellWidth: 12}, 4: {cellWidth: 50}, 5: {cellWidth: 100}}
-    });
-    
-    doc.save('Zeraphis_' + new Date().toLocaleDateString('it-IT') + '.pdf');
-}
+        function initFiltri() {
+            const capitoli = new Set();
+            datiMissioni.forEach(m => m.cap.forEach(c => capitoli.add(c)));
+            const select = document.getElementById('filtroCapitolo');
+            Array.from(capitoli).sort().forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c;
+                opt.textContent = `Capitolo ${c}`;
+                select.appendChild(opt);
+            });
+        }
 
-renderLegenda();
-renderTable();
-aggiornaStats();
+        // ===== FILTRI =====
+        document.getElementById('ricerca').addEventListener('keyup', (e) => {
+            filtroAttivo.ricerca = e.target.value;
+            renderTable();
+        });
+
+        document.getElementById('filtroCapitolo').addEventListener('change', (e) => {
+            filtroAttivo.capitolo = e.target.value;
+            renderTable();
+        });
+
+        document.getElementById('filtroStato').addEventListener('change', (e) => {
+            filtroAttivo.stato = e.target.value;
+            renderTable();
+        });
+
+        // ===== EXPORT PDF =====
+        async function exportPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({orientation: 'landscape'});
+            const pageHeight = doc.internal.pageSize.getHeight();
+            const pageWidth = doc.internal.pageSize.getWidth();
+            let yPos = 10;
+
+            doc.setFontSize(16);
+            doc.text('📋 Tracker Missioni - Esportazione', pageWidth / 2, yPos, {align: 'center'});
+            yPos += 10;
+
+            doc.setFontSize(10);
+            const stats = `Completate: ${completate.length}/${datiMissioni.length} (${Math.round((completate.length/datiMissioni.length)*100)}%)`;
+            doc.text(stats, pageWidth / 2, yPos, {align: 'center'});
+            yPos += 8;
+
+            const columns = ['✓', 'SEQ', 'EP', 'Inizia se', 'Task', 'Cap', 'EV'];
+            const rows = [];
+
+            datiMissioni.forEach((m, idx) => {
+                const chk = completate.includes(idx) ? '✓' : '';
+                rows.push([
+                    chk,
+                    m.seq,
+                    m.ep || '',
+                    m.inizia.substring(0, 25),
+                    m.task[0].substring(0, 30),
+                    m.cap.join(','),
+                    m.ev || ''
+                ]);
+            });
+
+            doc.autoTable({
+                head: [columns],
+                body: rows,
+                startY: yPos,
+                margin: 5,
+                theme: 'grid',
+                styles: {fontSize: 8},
+                headStyles: {fillColor: [88, 166, 255]},
+                alternateRowStyles: {fillColor: [220, 220, 220]}
+            });
+
+            doc.save('tracker-missioni.pdf');
+        }
+
+        function resetall() {
+            if (confirm('⚠️ Sei sicuro? Questa azione non si può annullare!')) {
+                completate = [];
+                salvaProgresso([]);
+                renderTable();
+            }
+        }
+
+        // ===== INIT =====
+        document.addEventListener('DOMContentLoaded', () => {
+            completate = caricaProgresso();
+            initFiltri();
+            renderTable();
+            aggiornaStats();
+        });
     </script>
 </body>
 </html>
